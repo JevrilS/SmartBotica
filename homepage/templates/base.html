@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" crossorigin="anonymous">
+
+    <!-- Title -->
+    <title>OmniSale - {% block title %}Title Missing{% endblock title %}</title>
+
+    <!-- Custom Styles -->
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'San Francisco', sans-serif;
+            background-color: #f7f9fc; /* Light gray background */
+            color: #333;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background-color: #0056b3; /* Primary dark blue */
+        }
+
+        .navbar-brand h3 {
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .navbar-nav .nav-link {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #ffd700; /* Gold color on hover */
+            transform: scale(1.1);
+        }
+
+        /* Dropdown Menu Styling */
+        .dropdown-menu {
+            background-color: #e3f2fd; /* Light blue background for dropdown */
+            border: none;
+        }
+
+        .dropdown-item {
+            color: #333;
+            font-size: 0.95rem;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #0056b3; /* Dark blue on hover */
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        /* Main Content Styling */
+        .container {
+            margin-top: 2rem;
+        }
+
+        /* Card Styling */
+        .card {
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background-color: #0056b3;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* Footer Styling */
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        footer a:hover {
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        /* Dialog Box Styling */
+        #dialogoverlay, #dialogbox {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Dialog Box -->
+    <div id="dialogoverlay"></div>
+    <div id="dialogbox">
+        <div class="align-middle">
+            <div id="dialogboxhead"></div>
+            <div id="dialogboxbody"></div>
+            <div id="dialogboxfoot"></div>
+        </div>
+    </div>
+
+    <main id="wrapper">
+        {% if user.is_authenticated %}
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <h3>SmartBotika</h3>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    {% if request.user.is_superuser %}
+                    <!-- Superuser Dropdowns -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" data-toggle="dropdown"><i class="fas fa-warehouse"></i> Inventory</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'new-stock' %}"><i class="fas fa-plus-circle"></i> Add New</a>
+                            <a class="dropdown-item" href="{% url 'inventory' %}"><i class="fas fa-list-ul"></i> Inventory List</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="purchaseDropdown" data-toggle="dropdown"><i class="fas fa-shopping-cart"></i> Purchases</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'select-supplier' %}"><i class="fas fa-truck-loading"></i> New Incoming Stock</a>
+                            <a class="dropdown-item" href="{% url 'purchases-list' %}"><i class="fas fa-clipboard-list"></i> Purchases List</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="saleDropdown" data-toggle="dropdown"><i class="fas fa-money-bill-alt"></i> Sales</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'new-sale' %}"><i class="fas fa-truck"></i> New Outgoing Stock</a>
+                            <a class="dropdown-item" href="{% url 'sales-list' %}"><i class="fas fa-file-invoice"></i> Sales Orders</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="supplierDropdown" data-toggle="dropdown"><i class="fas fa-truck-moving"></i> Suppliers</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'new-supplier' %}"><i class="fas fa-user-plus"></i> Add New Supplier</a>
+                            <a class="dropdown-item" href="{% url 'suppliers-list' %}"><i class="fas fa-address-book"></i> Suppliers List</a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <!-- Regular User Links -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" data-toggle="dropdown"><i class="fas fa-warehouse"></i> Inventory</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'inventory' %}"><i class="fas fa-list-ul"></i> Inventory List</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="saleDropdown" data-toggle="dropdown"><i class="fas fa-money-bill-alt"></i> Sales</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'new-sale' %}"><i class="fas fa-truck"></i> New Outgoing Stock</a>
+                            <a class="dropdown-item" href="{% url 'sales-list' %}"><i class="fas fa-file-invoice"></i> Sales Orders</a>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-toggle="dropdown"><i class="fas fa-user-circle"></i> {{ request.user.username }}</a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-tools"></i> Admin Page</a>
+                            <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Content Section -->
+        <div id="content">
+            <div class="container">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mt-3"> {{ message }} </div>
+                {% endfor %}
+                {% endif %}
+
+                <div class="container">
+                    {% block content %}{% endblock content %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 SmartBotika. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+    </footer>
+
+    <!-- jQuery, Popper.js, and Bootstrap JS -->
+    <script src="{% static 'bootstrap/jquery-3.3.1.slim.min.js' %}"></script>
+    <script src="{% static 'bootstrap/popper.min.js' %}"></script>
+    <script src="{% static 'bootstrap/bootstrap.min.js' %}"></script>
+</body>
+</html>
