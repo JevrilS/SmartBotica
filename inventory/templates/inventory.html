@@ -25,11 +25,10 @@
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                <th>Brand</th>
+                                <th>Medicine Type</th>
                                 <th>Product Name</th>
                                 <th>Product Code</th>
-                                <th>Quantity</th>
-                                <th>Units</th>
+                                <th>Available Stocks</th>
                                 <th>Threshold</th>
                                 <th>Actions</th>
                             </tr>
@@ -42,7 +41,6 @@
                                 <td>{{ stock.product }}</td>
                                 <td>{{ stock.code }}</td>
                                 <td>{{ stock.quantity }}</td>
-                                <td>{{ stock.units }}</td>
                                 <td>{{ stock.threshold }}</td>
                                 <td>
                                     <a href="{% url 'edit-stock' stock.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>

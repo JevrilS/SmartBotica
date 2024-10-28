@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" crossorigin="anonymous">
 
     <!-- Title -->
-    <title>OmniSale - {% block title %}Title Missing{% endblock title %}</title>
+    <title>SmartBotika - {% block title %}Title Missing{% endblock title %}</title>
 
     <!-- Custom Styles -->
     <style>
@@ -145,25 +145,12 @@
                             <a class="dropdown-item" href="{% url 'inventory' %}"><i class="fas fa-list-ul"></i> Inventory List</a>
                         </div>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="purchaseDropdown" data-toggle="dropdown"><i class="fas fa-shopping-cart"></i> Purchases</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'select-supplier' %}"><i class="fas fa-truck-loading"></i> New Incoming Stock</a>
-                            <a class="dropdown-item" href="{% url 'purchases-list' %}"><i class="fas fa-clipboard-list"></i> Purchases List</a>
-                        </div>
-                    </li>
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="saleDropdown" data-toggle="dropdown"><i class="fas fa-money-bill-alt"></i> Sales</a>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{% url 'new-sale' %}"><i class="fas fa-truck"></i> New Outgoing Stock</a>
                             <a class="dropdown-item" href="{% url 'sales-list' %}"><i class="fas fa-file-invoice"></i> Sales Orders</a>
-                        </div>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="supplierDropdown" data-toggle="dropdown"><i class="fas fa-truck-moving"></i> Suppliers</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'new-supplier' %}"><i class="fas fa-user-plus"></i> Add New Supplier</a>
-                            <a class="dropdown-item" href="{% url 'suppliers-list' %}"><i class="fas fa-address-book"></i> Suppliers List</a>
                         </div>
                     </li>
                     {% else %}
