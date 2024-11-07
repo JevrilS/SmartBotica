@@ -87,9 +87,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartbotika',
+        'NAME': 'smartbotica',
         'USER': 'postgres',
-        'PASSWORD': '123',
+        'PASSWORD': '1234',
         'HOST': 'localhost',  # Or the IP address of your MySQL server
         'PORT': '5432',       # Default MySQL 
 

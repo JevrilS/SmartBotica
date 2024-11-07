@@ -4,14 +4,16 @@
 
 {% block title %} Inventory List {% endblock title %}
 
-
 {% block content %}
 <div class="container-fluid">
     <div class="row my-4">
-        <div class="col-md-8">
+        <div class="col-md-6">
             <h1 class="text-primary"><i class="fas fa-clipboard-list mr-2"></i><span style="color: black;">Inventory List</span></h1>
         </div>
-        <div class="col-md-4 text-right">
+        <div class="col-md-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search Inventory..." />
+        </div>
+        <div class="col-md-3 text-right">
             <a class="btn btn-outline-success" href="{% url 'new-stock' %}"><i class="fas fa-plus mr-2"></i>Add New Stock</a>
         </div>
     </div>
@@ -21,27 +23,31 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body p-0">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead>
+                    <table class="table table-hover table-bordered text-center" id="inventoryTable">
+                        <thead class="thead-dark">
                             <tr>
-                                <th>Category</th>
-                                <th>Medicine Type</th>
-                                <th>Product Name</th>
-                                <th>Product Code</th>
-                                <th>Available Stocks</th>
-                                <th>Threshold</th>
+                                <th onclick="sortTable(0)">Product Code <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(1)">Product Name <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(2)">Category <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(3)">Brand <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(4)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(5)">Threshold <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(6)">Date Added <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(7)">Expiration Date <span class="sort-icon">&#x25B4;</span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for stock in object_list %}
                             <tr>
+                                <td>{{ stock.code }}</td>
+                                <td>{{ stock.product }}</td>
                                 <td>{{ stock.category }}</td>
                                 <td>{{ stock.brand }}</td>
-                                <td>{{ stock.product }}</td>
-                                <td>{{ stock.code }}</td>
                                 <td>{{ stock.quantity }}</td>
                                 <td>{{ stock.threshold }}</td>
+                                <td>{{ stock.date_added|date:"Y-m-d" }}</td>
+                                <td>{{ stock.expiration_date|default:"N/A" }}</td>
                                 <td>
                                     <a href="{% url 'edit-stock' stock.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
                                     <a href="{% url 'delete-stock' stock.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
@@ -55,6 +61,7 @@
         </div>
     </div>
 
+    <!-- Pagination -->
     <div class="row mt-4">
         <div class="col-md-12 d-flex justify-content-center">
             {% if is_paginated %}
@@ -62,14 +69,10 @@
                 <ul class="pagination">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
+                        <a class="page-link" href="?page=1" aria-label="First">&laquo;&laquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">&laquo;</a>
                     </li>
                     {% endif %}
 
@@ -87,14 +90,10 @@
 
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">&raquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">&raquo;&raquo;</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -110,4 +109,45 @@
     </div>
     {% endif %}
 </div>
+
+<!-- JavaScript for Sorting and Dynamic Search -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Global search filter
+        $("#searchInput").on("keyup", function () {
+            var value = $(this).val().toLowerCase();
+            $("#inventoryTable tbody tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+    });
+
+    // Function for sorting columns
+    function sortTable(columnIndex) {
+        const table = document.getElementById("inventoryTable");
+        let rows = Array.from(table.rows).slice(1); // Exclude header
+        let isAscending = table.rows[0].cells[columnIndex].getAttribute("data-order") === "asc";
+        rows.sort((a, b) => {
+            const cellA = a.cells[columnIndex].textContent.trim();
+            const cellB = b.cells[columnIndex].textContent.trim();
+            if (!isNaN(cellA) && !isNaN(cellB)) { // Numeric comparison
+                return isAscending ? cellA - cellB : cellB - cellA;
+            } else { // String comparison
+                return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+            }
+        });
+        
+        table.tBodies[0].append(...rows);
+        isAscending ? table.rows[0].cells[columnIndex].setAttribute("data-order", "desc") : table.rows[0].cells[columnIndex].setAttribute("data-order", "asc");
+        updateSortIcons(columnIndex, isAscending);
+    }
+
+    // Function to update sort icons
+    function updateSortIcons(columnIndex, isAscending) {
+        const icons = document.querySelectorAll(".sort-icon");
+        icons.forEach(icon => icon.innerHTML = "&#x25B4;"); // Reset icons
+        icons[columnIndex].innerHTML = isAscending ? "&#x25BE;" : "&#x25B4;"; // Set arrow direction
+    }
+</script>
 {% endblock content %}

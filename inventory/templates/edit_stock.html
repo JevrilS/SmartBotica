@@ -7,56 +7,50 @@
 {% block content %}
 <style>
     body {
-        background-color: #cce6ff; /* A bit higher shade of blue */
-        color: #000000; /* Black text color */
-    }
-
-    .card-header {
-        padding: 25px;
-        border-bottom: none;
-        font-weight: bold;
-        color: #000000; /* Heading in black color */
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        text-align: left; /* Heading left aligned */
-    }
-    .card-header h4 {
-        color: #000000; /* Keep the heading "New Sale" in black color */
+        background-color: #f2f6fc;
+        color: #333333;
     }
     .card {
         border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         background-color: #ffffff;
         border: none;
     }
+    .card-header {
+        padding: 20px;
+        background-color: #007bff;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 1.2rem;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        text-align: center;
+    }
+    .card-body {
+        padding: 30px;
+    }
     .form-group label {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
-        color: #000000; /* Black label text color */
+        color: #333333;
         margin-bottom: 5px;
     }
-
     .form-control {
-        border-radius: 10px;
-        padding: 12px;
+        border-radius: 8px;
+        padding: 10px;
         border: 1px solid #cad1d7;
-        background-color: #f6f9fc; /* Light grey input background */
-        color: #000000; /* Black input text color */
+        background-color: #f9fafc;
     }
-
     .btn-primary {
-        background-color: #007bff; /* Simple blue button background */
-        border-color: #007bff; /* Simple blue button border */
+        background-color: #28a745;
+        border-color: #28a745;
         font-weight: 600;
-        padding: 12px 30px;
-        border-radius: 10px;
+        padding: 10px 25px;
+        border-radius: 8px;
         transition: background-color 0.3s ease;
-        color: #ffffff; /* White button text color */
     }
-
     .btn-primary:hover {
-        background-color: #0056b3; /* Darker blue on hover */
-        border-color: #0056b3;
+        background-color: #218838;
     }
 </style>
 
@@ -67,31 +61,34 @@
                 <div class="card-header">
                     <h4 class="mb-0">Edit Product Details</h4>
                 </div>
-                <div class="card-body" style="padding: 30px;">
+                <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
                         <div class="row">
+                            <!-- Left Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="{{ form.category.id_for_label }}">Category</label>
                                     {{ form.category|add_class:"form-control" }}
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.brand.id_for_label }}">Medicine Type</label>
+                                    <label for="{{ form.brand.id_for_label }}">Brand</label>
                                     {{ form.brand|add_class:"form-control" }}
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.code.id_for_label }}">Code</label>
-                                    {{ form.code|add_class:"form-control" }}
-                                </div>
-                                <div class="form-group">
-                                    <label for="{{ form.product.id_for_label }}">Product_Name</label>
+                                    <label for="{{ form.product.id_for_label }}">Product Name</label>
                                     {{ form.product|add_class:"form-control" }}
                                 </div>
+                                <div class="form-group">
+                                    <label for="{{ form.code.id_for_label }}">Product Code</label>
+                                    {{ form.code|add_class:"form-control" }}
+                                </div>
                             </div>
+
+                            <!-- Right Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="{{ form.units.id_for_label }}">Units</label>
+                                    <label for="{{ form.units.id_for_label }}">Medicine Type</label>
                                     {{ form.units|add_class:"form-control" }}
                                 </div>
                                 <div class="form-group">
@@ -104,8 +101,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <button type="submit" class="btn btn-primary">Save</button>
+                        <div class="text-right mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>

@@ -7,6 +7,14 @@ class StockForm(forms.ModelForm):
     class Meta:
         model = Stock
         fields = ['category', 'brand', 'product', 'code', 'units', 'quantity', 'threshold']
-        widgets = {
-            'threshold': forms.NumberInput(attrs={'required': False}),
-        }
+
+class AddStockForm(forms.ModelForm):
+    expiration_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label="Expiration Date"
+    )
+
+    class Meta:
+        model = Stock
+        fields = ['quantity', 'expiration_date']  # Include expiration date for adding stock

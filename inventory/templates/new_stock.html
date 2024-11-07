@@ -2,61 +2,53 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block title %}New Stock{% endblock title %}
+{% block title %}Add New Stock{% endblock title %}
 
 {% block content %}
 <style>
     body {
-        background-color: #cce6ff; /* A bit higher shade of blue */
-    }
-
-    .card-header {
-        padding: 25px;
-        border-bottom: none;
-        font-weight: bold;
-        color: #000000; /* Heading in black color */
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        text-align: left; /* Heading left aligned */
-    }
-    .card-header h4 {
-        color: #000000; /* Keep the heading "New Sale" in black color */
+        background-color: #f2f6fc;
     }
     .card {
         border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         background-color: #ffffff;
         border: none;
     }
-
+    .card-header {
+        padding: 20px;
+        background-color: #007bff;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 1.2rem;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .card-body {
+        padding: 30px;
+    }
     .form-group label {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
-        color: #000000; /* Black label text color */
+        color: #333333;
         margin-bottom: 5px;
     }
-
     .form-control {
-        border-radius: 10px;
-        padding: 12px;
-        border: none;
-        background-color: #f8f9fa; /* Light grey input background */
-        color: #000000; /* Black input text color */
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #e0e6ed;
+        background-color: #f9fafc;
     }
-
     .btn-primary {
-        background-color: #007bff; /* Simple blue button background */
-        border-color: #007bff; /* Simple blue button border */
+        background-color: #28a745;
+        border-color: #28a745;
         font-weight: 600;
-        padding: 12px 30px;
-        border-radius: 10px;
+        padding: 10px 25px;
+        border-radius: 8px;
         transition: background-color 0.3s ease;
-        color: #ffffff; /* White button text color */
     }
-
     .btn-primary:hover {
-        background-color: #0056b3; /* Darker blue on hover */
-        border-color: #0056b3;
+        background-color: #218838;
     }
 </style>
 
@@ -64,39 +56,67 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">New Stock</h4>
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Add New Stock</h4>
                 </div>
-                <div class="card-body" style="padding: 30px;">
-                    <form method="post">
+                <div class="card-body">
+                    <form method="post" action="{% url 'new-stock' %}">
                         {% csrf_token %}
+                        
+                        <!-- Product Selection -->
+                        <div class="form-group">
+                            <label for="product_list">Select Existing Product</label>
+                            <select id="product_list" name="product_id" class="form-control" required>
+                                <option value="">--- Select a product ---</option>
+                                {% for product in products %}
+                                    <option value="{{ product.id }}">{{ product.product }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
                         <div class="row">
+                            <!-- Left Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="{{ form.category.id_for_label }}">Category</label>
-                                    {{ form.category|add_class:"form-control" }}
+                                    <label>Category</label>
+                                    <input type="text" id="category" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.brand.id_for_label }}">Medicine Type</label>
-                                    {{ form.brand|add_class:"form-control" }}
+                                    <label>Brand</label>
+                                    <input type="text" id="brand" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.product.id_for_label }}">Product Name</label>
-                                    {{ form.product|add_class:"form-control" }}
+                                    <label>Product Name</label>
+                                    <input type="text" id="product" class="form-control" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Date Added</label>
+                                    <input type="text" id="date_added" class="form-control" readonly>
                                 </div>
                             </div>
+
+                            <!-- Right Column -->
                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Medicine Type</label> <!-- Renamed label -->
+                                    <input type="text" id="units" class="form-control" readonly> <!-- Keeping the ID same for JS compatibility -->
+                                </div>
+                                <div class="form-group">
+                                    <label>Threshold</label>
+                                    <input type="text" id="threshold" class="form-control" readonly>
+                                </div>
                                 <div class="form-group">
                                     <label for="{{ form.quantity.id_for_label }}">Quantity</label>
                                     {{ form.quantity|add_class:"form-control" }}
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.threshold.id_for_label }}">Threshold</label>
-                                    {{ form.threshold|add_class:"form-control" }}
+                                    <label for="{{ form.expiration_date.id_for_label }}">Expiration Date</label>
+                                    {{ form.expiration_date|add_class:"form-control" }}
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right">
+
+                        <div class="text-right mt-4">
                             <button type="submit" class="btn btn-primary">Add to Inventory</button>
                         </div>
                     </form>
@@ -105,5 +125,38 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#product_list').change(function() {
+        const productId = $(this).val();
+        if (productId) {
+            $.ajax({
+                url: '{% url "fetch_product_details" 0 %}'.replace('0', productId),
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (!data.error) {
+                        $('#category').val(data.category);
+                        $('#brand').val(data.brand);
+                        $('#product').val(data.product);
+                        $('#units').val(data.units);  // "Medicine Type" value
+                        $('#threshold').val(data.threshold);
+                        $('#date_added').val(data.date_added);
+                    } else {
+                        console.error("Error:", data.error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX error:", status, error);
+                }
+            });
+        } else {
+            $('#category, #brand, #product, #units, #threshold, #date_added').val('');
+        }
+    });
+});
+</script>
 
 {% endblock content %}
