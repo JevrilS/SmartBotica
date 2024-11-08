@@ -8,6 +8,7 @@ from django_filters.views import FilterView
 from .filters import StockFilter
 from django.http import JsonResponse
 from django.utils import timezone
+from django.db.models import Q
 
 
 # View to fetch product details by product ID
@@ -30,9 +31,25 @@ def fetch_product_details(request, product_id):
 
 class StockListView(FilterView):
     filterset_class = StockFilter
-    queryset = Stock.objects.filter(is_deleted=False)
     template_name = 'inventory.html'
     paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Stock.objects.filter(is_deleted=False)
+        search_query = self.request.GET.get('search', '')
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__icontains=search_query) |
+                Q(category__icontains=search_query) |
+                Q(brand__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 class StockCreateView(SuccessMessageMixin, CreateView):
     model = Stock
@@ -47,20 +64,23 @@ class StockCreateView(SuccessMessageMixin, CreateView):
         context["savebtn"] = 'Add to Inventory'
         context["products"] = Stock.objects.filter(is_deleted=False)  # Pass products to the template
         return context
-
     def form_valid(self, form):
         product_id = self.request.POST.get('product_id')
         stock = Stock.objects.get(id=product_id)
-        stock.quantity += form.cleaned_data['quantity']  # Increment the existing quantity
+
+        # Ensure the product is marked as active
+        stock.is_deleted = False
         
-        # Update expiration date if provided in form
+        # Increment the existing quantity
+        stock.quantity += form.cleaned_data['quantity']
+        
+        # Update expiration date if provided
         expiration_date = form.cleaned_data.get('expiration_date')
         if expiration_date:
             stock.expiration_date = expiration_date
             
         stock.save()
         return redirect(self.success_url)
-
 class StockUpdateView(SuccessMessageMixin, UpdateView):
     model = Stock
     form_class = StockForm
@@ -89,3 +109,18 @@ class StockDeleteView(View):
         stock.save()
         messages.success(request, self.success_message)
         return redirect('inventory')
+def search_suggestions(request):
+    query = request.GET.get('q', '')
+    suggestions = []
+    
+    if query:
+        matching_stocks = Stock.objects.filter(
+            Q(product__icontains=query) |
+            Q(category__icontains=query) |
+            Q(brand__icontains=query)
+        ).distinct()
+        
+        # Collect suggestions (e.g., product names)
+        suggestions = list(matching_stocks.values_list('product', flat=True)[:5])  # Limit to 5 suggestions
+    
+    return JsonResponse({'suggestions': suggestions})
