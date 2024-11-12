@@ -11,5 +11,6 @@ urlpatterns = [
     path('update-password/', views.update_password, name='update_password'),
     path('get-sales-data/', get_sales_data, name='get_sales_data'),
     path('generate-sales-report/', generate_sales_report, name='generate_sales_report'),
+
     # Add other URL patterns here
 ]

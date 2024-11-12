@@ -34,10 +34,11 @@
                                 <th onclick="sortTable(1)">Product Name <span class="sort-icon">&#x25B4;</span></th>
                                 <th onclick="sortTable(2)">Category <span class="sort-icon">&#x25B4;</span></th>
                                 <th onclick="sortTable(3)">Brand <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(4)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(5)">Threshold <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(6)">Date Added <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(7)">Expiration Date <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(4)">Price <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(5)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(6)">Threshold <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(7)">Date Added <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(8)">Expiration Date <span class="sort-icon">&#x25B4;</span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -48,6 +49,7 @@
                                 <td class="highlight">{{ stock.product }}</td>
                                 <td class="highlight">{{ stock.category }}</td>
                                 <td class="highlight">{{ stock.brand }}</td>
+                                <td>{{ stock.price }}</td> <!-- Price Column -->
                                 <td>{{ stock.quantity }}</td>
                                 <td>{{ stock.threshold }}</td>
                                 <td>{{ stock.date_added|date:"Y-m-d" }}</td>

@@ -2,31 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View, CreateView, UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
-from .models import Stock
-from .forms import StockForm, AddStockForm  # Import both forms
+
+from .models import Stock, Category
+from .forms import StockForm, AddStockForm, AddMedicineForm  # Import all necessary forms
 from django_filters.views import FilterView
 from .filters import StockFilter
 from django.http import JsonResponse
-from django.utils import timezone
 from django.db.models import Q
-
-
-# View to fetch product details by product ID
-def fetch_product_details(request, product_id):
-    try:
-        stock = Stock.objects.get(id=product_id)
-        data = {
-            'category': stock.category,
-            'brand': stock.brand,
-            'product': stock.product,
-            'units': stock.units,
-            'threshold': stock.threshold,
-            'date_added': stock.date_added.strftime('%Y-%m-%d %H:%M:%S'),  # Format date for display
-            'expiration_date': stock.expiration_date.strftime('%Y-%m-%d') if stock.expiration_date else None,  # Format expiration date if it exists
-        }
-        return JsonResponse(data)
-    except Stock.DoesNotExist:
-        return JsonResponse({'error': 'Product not found'}, status=404)
 
 
 class StockListView(FilterView):
@@ -41,7 +23,7 @@ class StockListView(FilterView):
         if search_query:
             queryset = queryset.filter(
                 Q(product__icontains=search_query) |
-                Q(category__icontains=search_query) |
+                Q(category__name__icontains=search_query) |  # Corrected field lookup
                 Q(brand__icontains=search_query)
             )
         return queryset
@@ -50,6 +32,7 @@ class StockListView(FilterView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
         return context
+
 
 class StockCreateView(SuccessMessageMixin, CreateView):
     model = Stock
@@ -62,8 +45,10 @@ class StockCreateView(SuccessMessageMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = 'New Stock'
         context["savebtn"] = 'Add to Inventory'
-        context["products"] = Stock.objects.filter(is_deleted=False)  # Pass products to the template
+        context["products"] = Stock.objects.filter(is_deleted=False)  # Existing products
+        context["categories"] = Category.objects.all()  # Add all categories to context
         return context
+
     def form_valid(self, form):
         product_id = self.request.POST.get('product_id')
         stock = Stock.objects.get(id=product_id)
@@ -81,6 +66,8 @@ class StockCreateView(SuccessMessageMixin, CreateView):
             
         stock.save()
         return redirect(self.success_url)
+
+
 class StockUpdateView(SuccessMessageMixin, UpdateView):
     model = Stock
     form_class = StockForm
@@ -94,6 +81,7 @@ class StockUpdateView(SuccessMessageMixin, UpdateView):
         context["savebtn"] = 'Update Stock'
         context["delbtn"] = 'Delete Stock'
         return context
+
 
 class StockDeleteView(View):
     template_name = "delete_stock.html"
@@ -109,6 +97,26 @@ class StockDeleteView(View):
         stock.save()
         messages.success(request, self.success_message)
         return redirect('inventory')
+
+def fetch_product_details(request, product_id):
+    try:
+        stock = Stock.objects.get(id=product_id)
+        data = {
+            'category_id': stock.category.id,  # Include the Category ID
+            'category_name': stock.category.name,  # Include the Category Name for reference
+            'brand': stock.brand,
+            'product': stock.product,
+            'price': str(stock.price),  # Replace 'units' with 'price'
+            'threshold': stock.threshold,
+            'date_added': stock.date_added.strftime('%Y-%m-%d %H:%M:%S'),
+            'expiration_date': stock.expiration_date.strftime('%Y-%m-%d') if stock.expiration_date else None,
+            'quantity': stock.quantity,  # Add quantity here
+        }
+        return JsonResponse(data)
+    except Stock.DoesNotExist:
+        return JsonResponse({'error': 'Product not found'}, status=404)
+
+
 def search_suggestions(request):
     query = request.GET.get('q', '')
     suggestions = []
@@ -116,7 +124,7 @@ def search_suggestions(request):
     if query:
         matching_stocks = Stock.objects.filter(
             Q(product__icontains=query) |
-            Q(category__icontains=query) |
+            Q(category__name__icontains=query) |  # Corrected field lookup
             Q(brand__icontains=query)
         ).distinct()
         
@@ -124,3 +132,17 @@ def search_suggestions(request):
         suggestions = list(matching_stocks.values_list('product', flat=True)[:5])  # Limit to 5 suggestions
     
     return JsonResponse({'suggestions': suggestions})
+
+
+def add_medicine(request):
+    if request.method == 'POST':
+        form = AddMedicineForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Medicine added successfully to the inventory.')
+            return redirect('inventory')  # Redirect to inventory page or a relevant page
+    else:
+        form = AddMedicineForm()
+
+    return render(request, 'add_medicine.html', {'form': form})
+

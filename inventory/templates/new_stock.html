@@ -62,7 +62,7 @@
                 <div class="card-body">
                     <form method="post" action="{% url 'new-stock' %}">
                         {% csrf_token %}
-                        
+
                         <!-- Product Selection -->
                         <div class="form-group">
                             <label for="product_list">Select Existing Product</label>
@@ -78,8 +78,13 @@
                             <!-- Left Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Category</label>
-                                    <input type="text" id="category" class="form-control" readonly>
+                                    <label for="category">Category</label>
+                                    <select id="category" name="category" class="form-control" required>
+                                        <option value="">--- Select a category ---</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label>Brand</label>
@@ -98,8 +103,8 @@
                             <!-- Right Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Medicine Type</label> <!-- Renamed label -->
-                                    <input type="text" id="units" class="form-control" readonly> <!-- Keeping the ID same for JS compatibility -->
+                                    <label>Price</label>
+                                    <input type="text" id="price" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
                                     <label>Threshold</label>
@@ -114,7 +119,7 @@
                                     {{ form.expiration_date|add_class:"form-control" }}
                                 </div>
                             </div>
-                        </div>
+                            
 
                         <div class="text-right mt-4">
                             <button type="submit" class="btn btn-primary">Add to Inventory</button>
@@ -138,12 +143,14 @@ $(document).ready(function() {
                 dataType: 'json',
                 success: function(data) {
                     if (!data.error) {
-                        $('#category').val(data.category);
+                        $('#category').val(data.category_id);  // Set the dropdown to the fetched Category ID
                         $('#brand').val(data.brand);
                         $('#product').val(data.product);
-                        $('#units').val(data.units);  // "Medicine Type" value
+                        $('#price').val(data.price);  // Update 'price' field
                         $('#threshold').val(data.threshold);
                         $('#date_added').val(data.date_added);
+                        $('#{{ form.expiration_date.id_for_label }}').val(data.expiration_date);  // Update expiration date
+                        $('#{{ form.quantity.id_for_label }}').val(data.quantity);  // Update quantity field
                     } else {
                         console.error("Error:", data.error);
                     }
@@ -153,10 +160,13 @@ $(document).ready(function() {
                 }
             });
         } else {
-            $('#category, #brand, #product, #units, #threshold, #date_added').val('');
+            $('#category').val('');  // Clear the category dropdown if no product is selected
+            $('#brand, #product, #price, #threshold, #date_added, #{{ form.expiration_date.id_for_label }}, #{{ form.quantity.id_for_label }}').val('');  // Clear all fields
         }
     });
 });
+
+
 </script>
 
 {% endblock content %}

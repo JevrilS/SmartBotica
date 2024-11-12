@@ -9,4 +9,6 @@ urlpatterns = [
     path('fetch_product_details/<int:product_id>/', views.fetch_product_details, name='fetch_product_details'),
     path('inventory/', views.StockListView.as_view(), name='inventory'),
     path('inventory/suggestions/', views.search_suggestions, name='inventory-suggestions'),  # AJAX endpoint for suggestions
+    path('inventory/add-medicine/', views.add_medicine, name='add-medicine'),
+
 ]

@@ -143,14 +143,16 @@
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{% url 'new-stock' %}"><i class="fas fa-plus-circle"></i> Restock</a>
                             <a class="dropdown-item" href="{% url 'inventory' %}"><i class="fas fa-list-ul"></i> Inventory List</a>
+                            <a class="dropdown-item" href="{% url 'add-medicine' %}"><i class="fas fa-capsules"></i> Add Medicine</a>
                         </div>
                     </li>
 
+
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="saleDropdown" data-toggle="dropdown"><i class="fas fa-money-bill-alt"></i> Sales</a>
+                        <a class="nav-link dropdown-toggle" href="#" id="saleDropdown" data-toggle="dropdown"><i class="fas fa-money-bill-alt"></i> Sales Management</a>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'new-sale' %}"><i class="fas fa-truck"></i> New Outgoing Stock</a>
-                            <a class="dropdown-item" href="{% url 'sales-list' %}"><i class="fas fa-file-invoice"></i> Sales Orders</a>
+                            <a class="dropdown-item" href="{% url 'new-sale' %}"><i class="fas fa-truck"></i> New Transaction</a>
+                            <a class="dropdown-item" href="{% url 'sales-list' %}"><i class="fas fa-file-invoice"></i> Transaction Log</a>
                         </div>
                     </li>
                     {% else %}
@@ -198,8 +200,6 @@
         </div>
         {% endif %}
     </main>
-walletw 
-
     <!-- jQuery, Popper.js, and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'bootstrap/popper.min.js' %}"></script>

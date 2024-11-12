@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Transaction Log{% endblock title %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center">Transaction Log</h2>
+    {% if sale_bills %}
+        {% for bill in sale_bills %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5>Bill No: {{ bill.billno }} - {{ bill.time|date:"Y-m-d H:i:s" }}</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price per Unit</th>
+                                <th>Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in bill.salebillno.all %}
+                                <tr>
+                                    <td>{{ item.product.product }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.perprice }}</td>
+                                    <td>{{ item.totalprice }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <h5 class="text-right"><strong>Total Bill Amount:</strong> {{ bill.get_total_price }}</h5>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-muted">No transactions have been recorded.</p>
+    {% endif %}
+</div>
+{% endblock content %}
