@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}View Product Stock History{% endblock title %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f2f6fc;
+        color: #333333;
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        background-color: #ffffff;
+        border: none;
+    }
+    .card-header {
+        padding: 20px;
+        background-color: #007bff;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 1.2rem;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        text-align: center;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .table {
+        font-size: 14px;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Product Stock History - {{ stock.product_name }}</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Product Details</h5>
+                    <p><strong>Category:</strong> {{ stock.category.name }}</p>
+                    <p><strong>Brand:</strong> {{ stock.brand }}</p>
+                    <p><strong>Product Code:</strong> {{ stock.code }}</p>
+                    <p><strong>Current Quantity:</strong> {{ stock.quantity }}</p>
+                    <p><strong>Last Updated:</strong> {{ stock.date_last_updated|date:"Y-m-d" }}</p>
+
+                    <h5 class="mt-4">Stock History</h5>
+                    <table class="table table-hover table-bordered text-center">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Date Added</th>
+                                <th>Quantity Added</th>
+                                <th>Total Stock</th>
+                                <th>Expiry Date</th>
+                                <th>Updated By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in stock_history %}
+                            <tr>
+                                <td>{{ record.date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ record.quantity_added }}</td>
+                                <td>{{ record.total_quantity }}</td>
+                                <td>{% if record.expiry_date %}{{ record.expiry_date|date:"Y-m-d" }}{% else %}N/A{% endif %}</td>
+                                <td>{{ record.updated_by }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No history available for this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="text-right mt-4">
+                        <a href="{% url 'inventory' %}" class="btn btn-secondary">Back to Inventory List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -4,16 +4,14 @@ from django.utils import timezone
 from transactions.models import SaleItem, SaleBill
 from inventory.models import Stock
 from datetime import datetime, timedelta, time
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.generic import TemplateView, View
 import csv
 from django.contrib import messages
-from django.http import HttpResponse
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.models import User
 from django.contrib.auth import login
 from .forms import UpdatePasswordForm
+from datetime import datetime
 
 def update_password(request):
     if request.method == 'POST':
@@ -27,8 +25,6 @@ def update_password(request):
         form = UpdatePasswordForm()
 
     return render(request, 'update_password.html', {'form': form})
-from django.db.models import Sum, F
-from datetime import datetime, timedelta, time
 
 def home_view(request):
     # Get the current time for greeting
@@ -53,13 +49,13 @@ def home_view(request):
     total_revenue = SaleItem.objects.aggregate(total=Sum('totalprice')).get('total', 0) or 0
     medicines_available = Stock.objects.filter(is_deleted=False).count()
     medicine_shortage = Stock.objects.filter(quantity__lt=F('threshold'), is_deleted=False).count()
-    inventory_status = "Good" if medicine_shortage == 0 else "Warning"  # Set status based on shortage count
+    inventory_status = "Good" if medicine_shortage == 0 else "Warning"
 
     # Get products with low stock
     low_stock_products = Stock.objects.filter(quantity__lt=F('threshold'), is_deleted=False)
 
     # Top 3 products sold today
-    top_products = SaleItem.objects.filter(billno__time__date=today).values('product__product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:3]
+    top_products = SaleItem.objects.filter(billno__time__date=today).values('product__product_name').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:3]
 
     context = {
         'greeting': greeting,
@@ -76,8 +72,6 @@ def home_view(request):
         }
     }
     return render(request, 'home.html', context)
-
-
 
 def get_sales_data(request):
     start_date = request.GET.get('start_date')
@@ -101,9 +95,6 @@ def get_sales_data(request):
     sales_labels = [date.strftime('%Y-%m-%d') for date in dates]
     sales_values = [sales_dict.get(date, 0) for date in dates]
 
-    print("Sales labels (get_sales_data):", sales_labels)
-    print("Sales values (get_sales_data):", sales_values)
-
     data = {
         'sales_labels': sales_labels,
         'sales_values': sales_values,
@@ -113,28 +104,24 @@ def get_sales_data(request):
 @require_POST
 def generate_sales_report(request):
     selected_date = request.POST.get('selected_date')
-    # Get all available sale dates
     sale_dates = SaleItem.objects.values_list('billno__time__date', flat=True).distinct()
 
     # Create a response object with CSV content type
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
 
-    # Create a CSV writer
     writer = csv.writer(response)
-
-    # Write the header row
     writer.writerow(['Date', 'Product', 'Quantity Sold'])
 
     # Iterate over each sale date and generate report data
     for sale_date in sale_dates:
         products_sold = SaleItem.objects.filter(
             billno__time__date=sale_date
-        ).values('product__product').annotate(total_quantity=Sum('quantity'))
+        ).values('product__product_name').annotate(total_quantity=Sum('quantity'))
 
         # Write the data rows for each product sold on the current date
         for product in products_sold:
-            writer.writerow([sale_date, product['product__product'], product['total_quantity']])
+            writer.writerow([sale_date, product['product__product_name'], product['total_quantity']])
 
     return response
 

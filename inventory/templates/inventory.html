@@ -18,9 +18,14 @@
             </form>
         </div>
         <div class="col-md-3 text-right">
-            <a class="btn btn-outline-success" href="{% url 'new-stock' %}"><i class="fas fa-plus mr-2"></i>Add New Stock</a>
+            <a class="btn btn-outline-success mr-2" href="{% url 'new-stock' %}">
+                <i class="fas fa-plus mr-2"></i>Stock In
+            </a>
+            <a class="btn btn-outline-warning" href="{% url 'general-stock-out' %}">
+                <i class="fas fa-minus mr-2"></i> Stock Out
+            </a>
+            
         </div>
-    </div>
 
     {% if object_list %}
     <div class="row">
@@ -34,11 +39,9 @@
                                 <th onclick="sortTable(1)">Product Name <span class="sort-icon">&#x25B4;</span></th>
                                 <th onclick="sortTable(2)">Category <span class="sort-icon">&#x25B4;</span></th>
                                 <th onclick="sortTable(3)">Brand <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(4)">Price <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(5)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(6)">Threshold <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(7)">Date Added <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(8)">Expiration Date <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(4)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(5)">Threshold <span class="sort-icon">&#x25B4;</span></th>
+                                <th onclick="sortTable(6)">Last Updated <span class="sort-icon">&#x25B4;</span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -46,17 +49,20 @@
                             {% for stock in object_list %}
                             <tr>
                                 <td>{{ stock.code }}</td>
-                                <td class="highlight">{{ stock.product }}</td>
+                                <td class="highlight">{{ stock.product_name }}</td>
                                 <td class="highlight">{{ stock.category }}</td>
                                 <td class="highlight">{{ stock.brand }}</td>
-                                <td>{{ stock.price }}</td> <!-- Price Column -->
                                 <td>{{ stock.quantity }}</td>
                                 <td>{{ stock.threshold }}</td>
-                                <td>{{ stock.date_added|date:"Y-m-d" }}</td>
-                                <td>{{ stock.expiration_date|default:"N/A" }}</td>
+                                <td>{{ stock.date_last_updated|date:"Y-m-d" }}</td>
                                 <td>
-                                    <a href="{% url 'edit-stock' stock.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                    <a href="{% url 'delete-stock' stock.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                                    <!-- View History and View Stock Out Buttons for Each Product -->
+                                    <a href="{% url 'view-stock-history' stock.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View History
+                                    </a>
+                                    <a href="{% url 'view-stock-out' stock.pk %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-box-open"></i> View Stock Out
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -146,7 +152,7 @@
         icons[columnIndex].innerHTML = isAscending ? "&#x25BE;" : "&#x25B4;"; // Set arrow direction
     }
 
-    // Highlight search term in product, category, and brand fields
+    // Highlight search term in product_name, category, and brand fields
     $(document).ready(function() {
         const searchQuery = "{{ request.GET.search|default:'' }}".trim();
         if (searchQuery) {

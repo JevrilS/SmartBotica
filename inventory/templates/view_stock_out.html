@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}View Stock Out History{% endblock title %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-primary">Stock Out History for {{ stock.product_name }}</h2>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-warning text-white">
+            <h5>Product Information</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Product Code:</strong> {{ stock.code }}</p>
+            <p><strong>Category:</strong> {{ stock.category }}</p>
+            <p><strong>Brand:</strong> {{ stock.brand }}</p>
+            <p><strong>Current Quantity:</strong> {{ stock.quantity }}</p>
+        </div>
+    </div>
+
+    {% if stock_out_history %}
+    <div class="card mt-4">
+        <div class="card-header bg-warning text-white">
+            <h5>Stock Out History</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Quantity Removed</th>
+                        <th>Remaining Quantity</th>
+                        <th>Updated By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in stock_out_history %}
+                    <tr>
+                        <td>{{ entry.date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ entry.quantity_removed }}</td>  <!-- Display quantity_removed -->
+                        <td>{{ entry.total_quantity }}</td>
+                        <td>{{ entry.updated_by.username }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4" role="alert">
+        No stock out history available for this product.
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
