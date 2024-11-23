@@ -1,34 +1,53 @@
-# models.py
 from django.db import models
 from django.conf import settings
 
-class Category(models.Model):
+
+class DosageForm(models.Model):
+    """
+    Represents the physical form of the medicine (e.g., Tablet, Syrup).
+    """
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
-class MedicineType(models.Model):
+
+class PharmacologicCategory(models.Model):
+    """
+    Represents pharmacological categories (e.g., Antibiotics, Analgesics).
+    """
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
+
 
 class Stock(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='stocks')
-    medicine_type = models.ForeignKey(MedicineType, on_delete=models.CASCADE, related_name='stocks')
-    brand = models.CharField(max_length=100, null=True, blank=True)
-    code = models.CharField(max_length=20, unique=True)
-    product_name = models.CharField(max_length=100)
+    """
+    Represents the stock details for each medicine.
+    """
+    item_no = models.AutoField(primary_key=True)
+    generic_name = models.CharField(max_length=100)
+    brand_name = models.CharField(max_length=100)
+    dosage_strength = models.CharField(max_length=50, null=True, blank=True)
+    form = models.ForeignKey(DosageForm, on_delete=models.CASCADE, related_name="stocks")
+    classification = models.CharField(max_length=100, null=True, blank=True)
+    pharmacologic_category = models.ForeignKey(
+        PharmacologicCategory, on_delete=models.CASCADE, related_name="stocks"
+    )
     quantity = models.PositiveIntegerField(default=0)
-    threshold = models.PositiveIntegerField(default=0)
+    expiry_date = models.DateField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
-    date_last_updated = models.DateTimeField(auto_now=True)
+    last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.product_name
+        return f"{self.generic_name} ({self.brand_name})"
+
 
 class StockHistory(models.Model):
+    """
+    Represents the history of changes in stock levels.
+    """
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='history')
     quantity_added = models.IntegerField()
     total_quantity = models.PositiveIntegerField()
@@ -37,4 +56,4 @@ class StockHistory(models.Model):
     expiry_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"History for {self.stock.product_name} on {self.date}"
+        return f"History for {self.stock.generic_name} on {self.date}"

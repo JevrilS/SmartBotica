@@ -35,38 +35,37 @@
                     <table class="table table-hover table-bordered text-center" id="inventoryTable">
                         <thead class="thead-dark">
                             <tr>
-                                <th onclick="sortTable(0)">Product Code <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(1)">Product Name <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(2)">Category <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(3)">Brand <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(4)">Available Stocks <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(5)">Threshold <span class="sort-icon">&#x25B4;</span></th>
-                                <th onclick="sortTable(6)">Last Updated <span class="sort-icon">&#x25B4;</span></th>
+                                <th>Item No</th>
+                                <th>Generic Name</th>
+                                <th>Brand Name</th>
+                                <th>Dosage Strength</th>
+                                <th>Form</th>
+                                <th>Qty</th>
+                                <th>Last Updated</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for stock in object_list %}
                             <tr>
-                                <td>{{ stock.code }}</td>
-                                <td class="highlight">{{ stock.product_name }}</td>
-                                <td class="highlight">{{ stock.category }}</td>
-                                <td class="highlight">{{ stock.brand }}</td>
+                                <td>{{ stock.item_no }}</td>
+                                <td>{{ stock.generic_name }}</td>
+                                <td>{{ stock.brand_name }}</td>
+                                <td>{{ stock.dosage_strength }}</td>
+                                <td>{{ stock.form }}</td>
                                 <td>{{ stock.quantity }}</td>
-                                <td>{{ stock.threshold }}</td>
-                                <td>{{ stock.date_last_updated|date:"Y-m-d" }}</td>
+                                <td>{{ stock.last_updated|date:"Y-m-d" }}</td>
                                 <td>
-                                    <!-- View History and View Stock Out Buttons for Each Product -->
                                     <a href="{% url 'view-stock-history' stock.pk %}" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye"></i> View History
                                     </a>
                                     <a href="{% url 'view-stock-out' stock.pk %}" class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-box-open"></i> View Stock Out
+                                        <i class="fas fa-box-open"></i> Stock Out
                                     </a>
                                 </td>
                             </tr>
                             {% endfor %}
-                        </tbody>
+                        </tbody>                        
                     </table>
                 </div>
             </div>

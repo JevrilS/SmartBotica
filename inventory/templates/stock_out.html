@@ -7,7 +7,6 @@
 <div class="container my-5">
     <h1 class="text-center text-danger">Manage Stock Out</h1>
     <form method="post" action="{% url 'general-stock-out' %}">
-
         {% csrf_token %}
         <table class="table table-bordered table-hover text-center">
             <thead class="thead-dark">
@@ -26,6 +25,7 @@
                     <tr>
                         <td>
                             <input type="checkbox" name="selected_products" value="{{ product.id }}-{{ product.nearest_expiry_date }}">
+
                         </td>
                         <td>{{ product.product_name }}</td>
                         <td>{{ product.category_name }}</td>
@@ -38,7 +38,8 @@
                                 name="stock_out_quantity_{{ product.id }}" 
                                 class="form-control" 
                                 min="1" 
-                                max="{{ product.quantity }}">
+                                max="{{ product.quantity }}" 
+                                disabled>
                         </td>
                     </tr>
                 {% empty %}
@@ -55,19 +56,30 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Toggle the required attribute and enable/disable input based on checkbox selection
-        $('.product-checkbox').change(function() {
-            const rowId = $(this).data('row-id');
-            const quantityInput = $(`#${rowId}`);
-            
+        $('input[type="checkbox"]').change(function() {
+            const row = $(this).closest('tr');
+            const quantityInput = row.find('input[type="number"]');
+
             if ($(this).is(':checked')) {
                 quantityInput.prop('disabled', false).prop('required', true);
             } else {
-                quantityInput.prop('disabled', true).prop('required', false).val(''); // Clear the value if unchecked
+                quantityInput.prop('disabled', true).prop('required', false).val('');
+            }
+        });
+
+        // Explicit prevention of multiple submissions
+        $('form').on('submit', function(e) {
+            if ($(this).data('submitted')) {
+                e.preventDefault();
+            } else {
+                $(this).data('submitted', true);
             }
         });
     });
+</script>
+
 </script>
 {% endblock content %}

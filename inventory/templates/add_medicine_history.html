@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Medicine List{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row my-4">
+        <div class="col-md-6">
+            <h1 class="text-primary">
+                <i class="fas fa-history mr-2"></i><span style="color: black;">Medicine List</span>
+            </h1>
+        </div>
+        <div class="col-md-6 text-right">
+            <!-- Buttons for populating dosage forms and categories -->
+            <a class="btn btn-outline-info mr-2" href="{% url 'populate-dosage-forms' %}">
+                <i class="fas fa-list-alt mr-2"></i> Populate Dosage Forms
+            </a>
+            <a class="btn btn-outline-info mr-2" href="{% url 'populate-pharmacologic-categories' %}">
+                <i class="fas fa-tags mr-2"></i> Populate Categories
+            </a>
+            <!-- Button to trigger Add Medicine form -->
+            <a class="btn btn-outline-success" href="{% url 'add-medicine' %}">
+                <i class="fas fa-plus-circle mr-2"></i> Add Medicine
+            </a>
+        </div>
+    </div>
+
+    {% if medicines %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover table-bordered text-center" id="historyTable">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Item No</th>
+                                <th>Generic Name</th>
+                                <th>Brand Name</th>
+                                <th>Dosage Strength</th>
+                                <th>Form</th>
+                                <th>Classification</th>
+                                <th>Pharmacologic Category</th>
+                                <th>Added On</th> <!-- Remove Quantity Column -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for medicine in medicines %}
+                            <tr>
+                                <td>{{ medicine.item_no }}</td>
+                                <td>{{ medicine.generic_name }}</td>
+                                <td>{{ medicine.brand_name }}</td>
+                                <td>{{ medicine.dosage_strength }}</td>
+                                <td>{{ medicine.form.name }}</td>
+                                <td>{{ medicine.classification }}</td>
+                                <td>{{ medicine.pharmacologic_category.name }}</td>
+                                <td>{{ medicine.last_updated|date:"Y-m-d H:i" }}</td> <!-- Remove Quantity Value -->
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="row mt-4">
+        <div class="col-md-12 d-flex justify-content-center">
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">&laquo;&laquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">&laquo;</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">&raquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">&raquo;&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="row my-5">
+        <div class="col-md-12 text-center">
+            <h3 class="text-muted">No recently added medicines available.</h3>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock content %}

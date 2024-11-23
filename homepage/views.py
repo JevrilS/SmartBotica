@@ -38,6 +38,55 @@ def home_view(request):
     dates = [start_of_week + timedelta(days=x) for x in range(7)]
 
     # Fetch weekly sales data and populate the dictionary for each date
+    sales_data = SaleItem.objects.filter(
+        billno__time__date__range=[start_of_week, end_of_week]
+    ).values('billno__time__date').annotate(total_sales=Sum('totalprice')).order_by('billno__time__date')
+
+    sales_dict = {data['billno__time__date']: float(data['total_sales']) for data in sales_data}
+
+    sales_labels = [date.strftime('%A') for date in dates]
+    sales_values = [sales_dict.get(date, 0) for date in dates]
+    sales_max = max(sales_values) if sales_values else 0
+
+    # Calculate inventory status, revenue, medicine availability
+    total_revenue = SaleItem.objects.aggregate(total=Sum('totalprice')).get('total', 0) or 0
+    medicines_available = Stock.objects.filter(is_deleted=False).count()
+    inventory_status = "Good" if medicines_available > 0 else "Warning"
+
+    # Get products with low stock (assume a critical stock level, e.g., quantity < 10)
+    low_stock_products = Stock.objects.filter(quantity__lt=10, is_deleted=False)
+
+    # Top 3 products sold today
+    top_products = SaleItem.objects.filter(billno__time__date=today).values(
+        'product__generic_name'
+    ).annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:3]
+
+    context = {
+        'greeting': greeting,
+        'sales_data': sales_values,
+        'sales_labels': sales_labels,
+        'sales_max': sales_max,
+        'low_stock_products': low_stock_products,
+        'top_products': top_products,
+        'overview_data': {
+            'inventory_status': inventory_status,
+            'revenue': total_revenue,
+            'medicines_available': medicines_available,
+            'medicine_shortage': low_stock_products.count(),
+        }
+    }
+    return render(request, 'home.html', context)
+    # Get the current time for greeting
+    current_time = datetime.now().time()
+    greeting = "Good morning" if current_time < time(12, 0) else "Good afternoon" if current_time < time(18, 0) else "Good evening"
+
+    # Calculate the weekly sales data
+    today = datetime.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    dates = [start_of_week + timedelta(days=x) for x in range(7)]
+
+    # Fetch weekly sales data and populate the dictionary for each date
     sales_data = SaleItem.objects.filter(billno__time__date__range=[start_of_week, end_of_week]).values('billno__time__date').annotate(total_sales=Sum('totalprice')).order_by('billno__time__date')
     sales_dict = {data['billno__time__date']: float(data['total_sales']) for data in sales_data}
 

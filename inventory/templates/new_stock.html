@@ -69,29 +69,30 @@
                             <select id="product_list" name="product_id" class="form-control" required>
                                 <option value="">--- Select a product ---</option>
                                 {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.product_name }}</option>
+                                    <option value="{{ product.item_no }}">{{ product.generic_name }}</option>
                                 {% endfor %}
                             </select>
+                            
                         </div>
 
                         <div class="row">
                             <!-- Left Column -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Category</label>
-                                    <input type="text" id="category" class="form-control" readonly>
+                                    <label>Generic Name</label>
+                                    <input type="text" id="generic_name" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>Medicine Type</label>
-                                    <input type="text" id="medicine_type" class="form-control" readonly>
+                                    <label>Brand Name</label>
+                                    <input type="text" id="brand_name" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>Brand</label>
-                                    <input type="text" id="brand" class="form-control" readonly>
+                                    <label>Dosage Strength</label>
+                                    <input type="text" id="dosage_strength" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>Product Name</label>
-                                    <input type="text" id="product_name" class="form-control" readonly>
+                                    <label>Form</label>
+                                    <input type="text" id="form" class="form-control" readonly>
                                 </div>
                             </div>
 
@@ -102,16 +103,12 @@
                                     <input type="text" id="quantity" class="form-control" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>Threshold</label>
-                                    <input type="text" id="threshold" class="form-control" readonly>
+                                    <label for="{{ form.quantity_added.id_for_label }}">Quantity to Add</label>
+                                    {{ form.quantity_added|add_class:"form-control" }}
                                 </div>
                                 <div class="form-group">
-                                    <label for="{{ form.quantity.id_for_label }}">Quantity to Add</label>
-                                    {{ form.quantity|add_class:"form-control" }}
-                                </div>
-                                <div class="form-group">
-                                    <label>Expiration Date</label>
-                                    <input type="date" id="expiration_date" name="expiration_date" class="form-control">
+                                    <label for="expiry_date">Expiration Date</label>
+                                    <input type="date" id="expiry_date" name="expiry_date" class="form-control" required>
                                 </div>
                             </div>
                         </div>
@@ -130,21 +127,20 @@
 <script>
     $(document).ready(function() {
         $('#product_list').change(function() {
-            const productId = $(this).val();
-            if (productId) {
+            const stockId = $(this).val();  // Get selected product ID
+            if (stockId) {
                 $.ajax({
-                    url: '{% url "fetch_product_details" 0 %}'.replace('0', productId),
+                    url: '{% url "fetch-product-details" 0 %}'.replace('0', stockId),  // Replace with the selected stockId
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
                         if (!data.error) {
-                            $('#category').val(data.category_name);  // Display category name
-                            $('#medicine_type').val(data.medicine_type_name);  // Set Medicine Type
-                            $('#brand').val(data.brand);
-                            $('#product_name').val(data.product_name);
+                            // Populate the fields with the response data
+                            $('#generic_name').val(data.generic_name);
+                            $('#brand_name').val(data.brand_name);
+                            $('#dosage_strength').val(data.dosage_strength);
+                            $('#form').val(data.form);
                             $('#quantity').val(data.quantity);
-                            $('#threshold').val(data.threshold);
-                            $('#expiration_date').val(data.expiration_date);  // Populate expiration date
                         } else {
                             console.error("Error:", data.error);
                         }
@@ -154,9 +150,12 @@
                     }
                 });
             } else {
-                $('#category, #medicine_type, #brand, #product_name, #quantity, #threshold, #expiration_date').val('');
+                // Clear fields if no product is selected
+                $('#generic_name, #brand_name, #dosage_strength, #form, #quantity').val('');
             }
         });
     });
 </script>
+
+
 {% endblock content %}

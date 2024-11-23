@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Populate Pharmacologic Categories {% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row my-4">
+        <div class="col-md-6">
+            <h1 class="text-primary">
+                <i class="fas fa-tags mr-2"></i><span style="color: black;">Populate Pharmacologic Categories</span>
+            </h1>
+        </div>
+        <div class="col-md-6 text-right">
+            <a class="btn btn-outline-secondary" href="{% url 'add-medicine-history' %}">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Add Medicine History
+            </a>
+        </div>
+    </div>
+
+    <!-- Form to Add Pharmacologic Category -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Add New Pharmacologic Category</div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'populate-pharmacologic-categories' %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name">Category Name</label>
+                            <input type="text" name="name" id="name" class="form-control" placeholder="Enter category name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Category</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if pharmacologic_categories %}
+    <!-- List of Existing Categories -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">Existing Categories</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-bordered text-center">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Category</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in pharmacologic_categories %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ category.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

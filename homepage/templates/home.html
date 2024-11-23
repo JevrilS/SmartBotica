@@ -11,7 +11,7 @@
     <!-- Overview Cards Row -->
     <div class="row text-center mb-4">
         <div class="col-md-3">
-            <div class="card border border-success shadow h-100"> <!-- Green outline -->
+            <div class="card border border-success shadow h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <i class="fas fa-shield-alt text-success fa-3x mb-3"></i>
                     <h5 class="fw-bold">{{ overview_data.inventory_status }}</h5>
@@ -21,7 +21,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border border-warning shadow h-100"> <!-- Yellow outline -->
+            <div class="card border border-warning shadow h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <i class="fas fa-wallet text-warning fa-3x mb-3"></i>
                     <h5 class="fw-bold">₱ {{ overview_data.revenue }}</h5>
@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border border-info shadow h-100"> <!-- Blue outline -->
+            <div class="card border border-info shadow h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <i class="fas fa-capsules text-info fa-3x mb-3"></i>
                     <h5 class="fw-bold">{{ overview_data.medicines_available }}</h5>
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border border-danger shadow h-100"> <!-- Red outline -->
+            <div class="card border border-danger shadow h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
                     <h5 class="fw-bold">{{ overview_data.medicine_shortage }}</h5>
@@ -70,8 +70,10 @@
                         <ul class="list-group list-group-flush">
                             {% for product in low_stock_products %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <strong>{{ product.product }}</strong>
-                                    <span class="badge bg-warning text-dark">Qty: {{ product.quantity }}, Threshold: {{ product.threshold }}</span>
+                                    <strong>{{ product.generic_name }}</strong>
+                                    <span class="badge bg-warning text-dark">
+                                        Qty: {{ product.quantity }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -95,7 +97,7 @@
                             <div class="col-md-12">
                                 <div class="card text-center border-0 shadow-sm">
                                     <div class="card-body">
-                                        <h6 class="fw-bold text-primary">{{ product.product__product }}</h6>
+                                        <h6 class="fw-bold text-primary">{{ product.stock__generic_name }}</h6>
                                         <p class="text-muted mb-0">Qty Sold: {{ product.total_quantity }}</p>
                                     </div>
                                 </div>
@@ -153,44 +155,8 @@
             }
         };
 
-        // Render the line graph on page load
         var lineCtx = document.getElementById('line-graph').getContext('2d');
         window.LineGraph = new Chart(lineCtx, lineConfig);
-
-        $('#updateChart').click(function() {
-            var startDate = $('#startDate').val();
-            var endDate = $('#endDate').val();
-            var url = $(this).data('url');
-            var csrfToken = getCookie('csrftoken');
-
-            var queryParams = new URLSearchParams({
-                start_date: startDate,
-                end_date: endDate
-            });
-
-            url += '?' + queryParams;
-
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                window.LineGraph.data.labels = data.sales_labels;
-                window.LineGraph.data.datasets[0].data = data.sales_values;
-                window.LineGraph.update();
-            })
-            .catch(error => {
-                console.error('Fetch Error:', error);
-            });
-        });
     });
 </script>
 {% endblock content %}
