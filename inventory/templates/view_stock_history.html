@@ -29,25 +29,68 @@
     .card-body {
         padding: 30px;
     }
+    .product-details {
+        font-size: 14px;
+        border: 1px solid #e0e6ed;
+        border-radius: 10px;
+        margin: 20px auto; /* Centers the table */
+        background-color: #f9fafc;
+        padding: 15px;
+        width: 80%; /* Slightly wider table for better layout */
+    }
+    .product-details th, .product-details td {
+        padding: 10px;
+        text-align: left;
+    }
+    .product-details th {
+        width: 30%;
+        font-weight: 600;
+        color: #555555;
+    }
     .table {
         font-size: 14px;
+    }
+    .table th {
+        background-color: #007bff;
+        color: #ffffff;
     }
 </style>
 
 <div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-11"> <!-- Increased the width slightly -->
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Product Stock History - {{ stock.product_name }}</h4>
+                    <h4 class="mb-0">Product Stock History - {{ stock.generic_name }} ({{ stock.brand_name }})</h4>
                 </div>
                 <div class="card-body">
-                    <h5>Product Details</h5>
-                    <p><strong>Category:</strong> {{ stock.category.name }}</p>
-                    <p><strong>Brand:</strong> {{ stock.brand }}</p>
-                    <p><strong>Product Code:</strong> {{ stock.code }}</p>
-                    <p><strong>Current Quantity:</strong> {{ stock.quantity }}</p>
-                    <p><strong>Last Updated:</strong> {{ stock.date_last_updated|date:"Y-m-d" }}</p>
+                    <h5 class="text-center">Product Details</h5> <!-- Center-aligned title -->
+                    <table class="product-details">
+                        <tr>
+                            <th>Generic Name:</th>
+                            <td>{{ stock.generic_name }}</td>
+                            <th>Brand Name:</th>
+                            <td>{{ stock.brand_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dosage Strength:</th>
+                            <td>{{ stock.dosage_strength }}</td>
+                            <th>Form:</th>
+                            <td>{{ stock.form.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Pharmacologic Category:</th>
+                            <td>{{ stock.pharmacologic_category.name }}</td>
+                            <th>Current Quantity:</th>
+                            <td>{{ stock.quantity }}</td>
+                        </tr>
+                        <tr>
+                            <th>Expiry Date:</th>
+                            <td>{% if stock.expiry_date %}{{ stock.expiry_date|date:"Y-m-d" }}{% else %}N/A{% endif %}</td>
+                            <th>Last Updated:</th>
+                            <td>{{ stock.last_updated|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                    </table>
 
                     <h5 class="mt-4">Stock History</h5>
                     <table class="table table-hover table-bordered text-center">
@@ -67,7 +110,7 @@
                                 <td>{{ record.quantity_added }}</td>
                                 <td>{{ record.total_quantity }}</td>
                                 <td>{% if record.expiry_date %}{{ record.expiry_date|date:"Y-m-d" }}{% else %}N/A{% endif %}</td>
-                                <td>{{ record.updated_by }}</td>
+                                <td>{% if record.updated_by %}{{ record.updated_by.username }}{% else %}System{% endif %}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -85,4 +128,5 @@
         </div>
     </div>
 </div>
+
 {% endblock content %}

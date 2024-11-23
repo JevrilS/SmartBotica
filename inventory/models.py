@@ -57,3 +57,4 @@ class StockHistory(models.Model):
 
     def __str__(self):
         return f"History for {self.stock.generic_name} on {self.date}"
+

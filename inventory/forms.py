@@ -42,14 +42,13 @@ class StockForm(forms.ModelForm):
             'expiry_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-
 class AddStockForm(forms.ModelForm):
     quantity_added = forms.IntegerField(
         required=True,
         widget=forms.NumberInput(attrs={'min': 1}),
         label="Quantity to Add"
     )
-    expiration_date = forms.DateField(
+    expiry_date = forms.DateField(  # Corrected field name to match the model
         required=False,
         widget=forms.DateInput(attrs={'type': 'date'}),
         label="Expiration Date"
@@ -57,12 +56,7 @@ class AddStockForm(forms.ModelForm):
 
     class Meta:
         model = StockHistory
-        fields = ['quantity_added', 'expiration_date']
-        labels = {
-            'quantity_added': 'Quantity to Add',
-            'expiration_date': 'Expiration Date',
-        }
-
+        fields = ['quantity_added', 'expiry_date']  # Use the correct field name
 
 class AddMedicineForm(forms.ModelForm):
     class Meta:

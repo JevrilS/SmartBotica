@@ -5,26 +5,27 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row my-4">
+        <!-- Page Title -->
         <div class="col-md-6">
             <h1 class="text-primary">
                 <i class="fas fa-history mr-2"></i><span style="color: black;">Medicine List</span>
             </h1>
         </div>
-        <div class="col-md-6 text-right">
-            <!-- Buttons for populating dosage forms and categories -->
-            <a class="btn btn-outline-info mr-2" href="{% url 'populate-dosage-forms' %}">
-                <i class="fas fa-list-alt mr-2"></i> Populate Dosage Forms
+        <!-- Buttons -->
+        <div class="col-md-6 d-flex justify-content-end align-items-center">
+            <a class="btn btn-outline-info mx-2" href="{% url 'populate-dosage-forms' %}">
+                <i class="fas fa-list-alt mr-2"></i> Add Dosage Forms
             </a>
-            <a class="btn btn-outline-info mr-2" href="{% url 'populate-pharmacologic-categories' %}">
-                <i class="fas fa-tags mr-2"></i> Populate Categories
+            <a class="btn btn-outline-info mx-2" href="{% url 'populate-pharmacologic-categories' %}">
+                <i class="fas fa-tags mr-2"></i> Add Categories
             </a>
-            <!-- Button to trigger Add Medicine form -->
-            <a class="btn btn-outline-success" href="{% url 'add-medicine' %}">
+            <a class="btn btn-outline-success mx-2" href="{% url 'add-medicine' %}">
                 <i class="fas fa-plus-circle mr-2"></i> Add Medicine
             </a>
         </div>
     </div>
 
+    <!-- Medicine List -->
     {% if medicines %}
     <div class="row">
         <div class="col-md-12">
@@ -40,7 +41,7 @@
                                 <th>Form</th>
                                 <th>Classification</th>
                                 <th>Pharmacologic Category</th>
-                                <th>Added On</th> <!-- Remove Quantity Column -->
+                                <th>Added On</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,11 +54,10 @@
                                 <td>{{ medicine.form.name }}</td>
                                 <td>{{ medicine.classification }}</td>
                                 <td>{{ medicine.pharmacologic_category.name }}</td>
-                                <td>{{ medicine.last_updated|date:"Y-m-d H:i" }}</td> <!-- Remove Quantity Value -->
+                                <td>{{ medicine.last_updated|date:"Y-m-d H:i" }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        
                     </table>
                 </div>
             </div>

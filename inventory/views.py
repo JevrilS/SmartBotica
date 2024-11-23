@@ -1,9 +1,12 @@
+from datetime import datetime
 import json
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View, CreateView, UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Min, Q
 
 from .models import Stock, StockHistory, DosageForm, PharmacologicCategory
 from .forms import StockForm, AddStockForm, AddMedicineForm
@@ -47,15 +50,18 @@ class StockListView(FilterView):
 
     def get_queryset(self):
         queryset = Stock.objects.filter(is_deleted=False)
-        search_query = self.request.GET.get('search', '')
-
+        search_query = self.request.GET.get('search', '')  # Fetch the search query
+        logging.debug(f"Search Query: {search_query}")  # Log for debugging
+        
         if search_query:
             queryset = queryset.filter(
                 Q(generic_name__icontains=search_query) |
                 Q(brand_name__icontains=search_query) |
-                Q(dosage_form__name__icontains=search_query) |
+                Q(dosage_strength__icontains=search_query) |
+                Q(form__name__icontains=search_query) |
                 Q(pharmacologic_category__name__icontains=search_query)
             )
+        logging.debug(f"Filtered Queryset Count: {queryset.count()}")
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -65,24 +71,24 @@ class StockListView(FilterView):
 
 
 
+
 from django.urls import reverse
 
 def fetch_product_details(request, product_id):
     try:
-        stock = Stock.objects.get(item_no=product_id)  # Use `item_no` as per your model
-
+        stock = Stock.objects.get(item_no=product_id)  # Fetch stock using item_no
         data = {
             'generic_name': stock.generic_name,
             'brand_name': stock.brand_name,
             'dosage_strength': stock.dosage_strength,
-            'dosage_form': stock.dosage_form.name if stock.dosage_form else None,
-            'pharmacologic_category': stock.pharmacologic_category.name if stock.pharmacologic_category else None,
+            'form': stock.form.name if stock.form else None,  # Corrected to use `form`
             'quantity': stock.quantity,
             'expiry_date': stock.expiry_date.strftime('%Y-%m-%d') if stock.expiry_date else None,
         }
         return JsonResponse(data)
     except Stock.DoesNotExist:
         return JsonResponse({'error': 'Product not found'}, status=404)
+
 
 
 
@@ -156,75 +162,169 @@ class StockCreateView(SuccessMessageMixin, CreateView):
         context["pharmacologic_categories"] = PharmacologicCategory.objects.all()
 
         return context
-
     def form_valid(self, form):
-        stock = form.save(commit=False)
-        quantity_added = form.cleaned_data['quantity_added']
-        expiry_date = form.cleaned_data.get('expiry_date')
+        try:
+            # Retrieve form data
+            quantity_added = form.cleaned_data['quantity_added']  # Matches AddStockForm
+            expiry_date = form.cleaned_data.get('expiry_date')  # Corrected to match the form and model
 
-        stock.quantity += quantity_added
-        stock.expiry_date = expiry_date
-        stock.save()
+            # Get the stock instance and save it
+            stock_id = self.request.POST.get('product_id')  # Fetch stock_id from POST data
+            stock = Stock.objects.get(item_no=stock_id)
 
-        # Add to Stock History
-        StockHistory.objects.create(
-            stock=stock,
-            quantity_added=quantity_added,
-            total_quantity=stock.quantity,
-            updated_by=self.request.user,
-            expiry_date=expiry_date
-        )
+            stock.quantity += quantity_added  # Update quantity
+            stock.expiry_date = expiry_date  # Update expiry date if provided
+            stock.save()  # Save the updated stock
 
-        return redirect(reverse('view-stock-history', kwargs={'pk': stock.pk}))
+            # Log the stock update
+            logging.debug(f"Stock updated successfully: {stock}")
+
+            # Create a StockHistory record
+            StockHistory.objects.create(
+                stock=stock,  # Reference the updated stock instance
+                quantity_added=quantity_added,
+                total_quantity=stock.quantity,  # Updated total quantity in Stock
+                updated_by=self.request.user if self.request.user.is_authenticated else None,
+                expiry_date=expiry_date,  # Use expiry_date for consistency
+            )
+
+            # Log the stock history creation
+            logging.debug(f"StockHistory created for stock: {stock}")
+
+            # Redirect to stock history view
+            messages.success(self.request, "Stock updated successfully.")
+            return redirect('view-stock-history', pk=stock.pk)
+
+        except Exception as e:
+            # Log error and return with an error message
+            logging.error(f"Error while updating stock: {e}")
+            messages.error(self.request, "An error occurred while updating the stock. Please try again.")
+            return redirect('new-stock')
+
 
 
 class StockOutView(View):
     template_name = "stock_out.html"
 
-    def post(self, request):
-        selected_products = request.POST.getlist("selected_products")
-        errors = []
+    def get(self, request):
+        # Fetch only active stocks with non-zero quantities
+        products = Stock.objects.filter(is_deleted=False, quantity__gt=0).annotate(
+            nearest_expiry_date=Min('history__expiry_date', filter=Q(history__quantity_added__gt=0))
 
-        for selection in selected_products:
+        )
+        return render(request, self.template_name, {'products': products})
+
+    def post(self, request):
+        selected_products = request.POST.getlist('selected_products')
+        errors = []
+        success = []
+
+        if not selected_products:
+            messages.error(request, "No products selected for stock out.")
+            return redirect('general-stock-out')
+
+        for product_data in selected_products:
             try:
-                stock_id, expiry_date = selection.split("-")
+                # Extract stock ID and expiry date
+                stock_id, expiry_date = product_data.split('-')
+                expiry_date = datetime.strptime(expiry_date, "%Y-%m-%d").date() if expiry_date != "N/A" else None
+
+                # Fetch the quantity to stock out
+                quantity_to_stock_out = int(request.POST.get(f'stock_out_quantity_{stock_id}', 0))
+                stock = get_object_or_404(Stock, pk=stock_id)
+
+                # Validation: Ensure sufficient stock
+                if quantity_to_stock_out <= 0 or quantity_to_stock_out > stock.quantity:
+                    errors.append(f"Invalid stock out quantity for {stock.generic_name}.")
+                    continue
+
+                # Reduce the stock quantity
+                stock.quantity -= quantity_to_stock_out
+                stock.save()
+
+                # Log the stock out in StockHistory
+                StockHistory.objects.create(
+                    stock=stock,
+                    quantity_added=-quantity_to_stock_out,
+                    total_quantity=stock.quantity,
+                    updated_by=request.user if request.user.is_authenticated else None,
+                    expiry_date=expiry_date,
+                )
+
+                success.append(f"Successfully processed stock out for {stock.generic_name}.")
+            except Exception as e:
+                errors.append(f"Error processing stock out: {e}")
+
+        # Add messages to display on the page
+        if success:
+            messages.success(request, " | ".join(success))
+        if errors:
+            messages.error(request, " | ".join(errors))
+
+        return redirect('general-stock-out')
+class GeneralStockOutView(View):
+    template_name = "stock_out.html"
+
+    def get(self, request):
+        # Fetch active stocks with a quantity greater than 0 and their nearest expiry dates
+        products = Stock.objects.filter(is_deleted=False, quantity__gt=0).annotate(
+            nearest_expiry_date=Min('history__expiry_date', filter=Q(history__quantity_added__gt=0))
+        )
+        return render(request, self.template_name, {'products': products})
+
+    def post(self, request):
+        selected_products = request.POST.getlist('selected_products')
+        errors = []
+        success = []
+
+        if not selected_products:
+            messages.error(request, "No products selected for stock out.")
+            return redirect('general-stock-out')
+
+        for product_data in selected_products:
+            try:
+                # Extract stock ID and expiry date
+                stock_id, expiry_date = product_data.split('-')
                 expiry_date = (
                     datetime.strptime(expiry_date, "%Y-%m-%d").date()
                     if expiry_date != "N/A"
                     else None
                 )
-                quantity_to_stock_out = int(request.POST.get(f"stock_out_quantity_{stock_id}", 0))
-                stock = get_object_or_404(Stock, id=stock_id)
 
-                if quantity_to_stock_out <= 0:
-                    errors.append(f"Invalid quantity for {stock.generic_name}.")
+                # Fetch the quantity to stock out
+                quantity_to_stock_out = int(request.POST.get(f'stock_out_quantity_{stock_id}', 0))
+                stock = get_object_or_404(Stock, pk=stock_id)
+
+                # Validation: Ensure sufficient stock
+                if quantity_to_stock_out <= 0 or quantity_to_stock_out > stock.quantity:
+                    errors.append(f"Invalid stock out quantity for {stock.generic_name}.")
                     continue
 
-                if stock.quantity < quantity_to_stock_out:
-                    errors.append(f"Not enough stock for {stock.generic_name}.")
-                    continue
-
+                # Reduce the stock quantity
                 stock.quantity -= quantity_to_stock_out
                 stock.save()
 
+                # Log the stock out in StockHistory
                 StockHistory.objects.create(
                     stock=stock,
                     quantity_added=-quantity_to_stock_out,
                     total_quantity=stock.quantity,
-                    updated_by=request.user,
+                    updated_by=request.user if request.user.is_authenticated else None,
                     expiry_date=expiry_date,
                 )
-            except ValueError:
-                errors.append(f"Invalid data for stock ID {stock_id}.")
-            except Exception as e:
-                errors.append(f"Error processing stock ID {stock_id}: {str(e)}")
 
+                success.append(f"Successfully processed stock out for {stock.generic_name}.")
+            except Exception as e:
+                errors.append(f"Error processing stock out: {e}")
+
+        # Add messages to display on the page
+        if success:
+            messages.success(request, " | ".join(success))
         if errors:
             messages.error(request, " | ".join(errors))
-        else:
-            messages.success(request, "Stock out successfully recorded.")
 
-        return redirect("stock-out")
+        return redirect('general-stock-out')
+
 
 from django.db import transaction
 
@@ -292,19 +392,33 @@ class ConfirmStockOutView(View):
         return redirect('stock-out')
 
 def search_suggestions(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '')  # Fetch the search query
     suggestions = []
 
     if query:
+        # Filter stocks based on search query
         matching_stocks = Stock.objects.filter(
             Q(generic_name__icontains=query) |
             Q(brand_name__icontains=query) |
-            Q(dosage_strength__icontains=query)
+            Q(dosage_strength__icontains=query) |
+            Q(form__name__icontains=query) |
+            Q(pharmacologic_category__name__icontains=query)
         ).distinct()
 
-        suggestions = list(matching_stocks.values('generic_name', 'brand_name', 'dosage_strength', 'form'))
+        # Prepare suggestions with stock.pk for linking
+        suggestions = list(
+            matching_stocks.values(
+                'pk',  # Include primary key for linking
+                'generic_name',
+                'brand_name',
+                'dosage_strength',
+                'form__name',
+            )
+        )
 
     return JsonResponse({'suggestions': suggestions})
+
+
 
 def add_medicine(request):
     if request.method == 'POST':
@@ -357,59 +471,105 @@ def add_medicine(request):
     return render(request, 'add_medicine.html', context)
 
 
-
-
-
-from django.utils import timezone
-
 class GeneralStockOutView(View):
     template_name = "stock_out.html"
 
     def get(self, request):
-        # Fetch only active stocks
-        products = Stock.objects.filter(is_deleted=False, quantity__gt=0)
-        return render(request, self.template_name, {'products': products})
+        # Fetch pharmacologic categories
+        pharmacologic_categories = PharmacologicCategory.objects.all()
+
+        # Fetch stock products with annotations
+        products = Stock.objects.filter(is_deleted=False, quantity__gt=0).select_related('form', 'pharmacologic_category').annotate(
+            nearest_expiry_date=Min(
+                'history__expiry_date', filter=Q(history__quantity_added__gt=0)
+            )
+        )
+
+        return render(request, self.template_name, {
+            'pharmacologic_categories': pharmacologic_categories,
+            'products': products,
+            'search_query': request.GET.get('search', ''),
+            'selected_category': request.GET.get('category', ''),
+            'expiring_soon_checked': request.GET.get('expiring_soon', ''),
+        })
+
 
     def post(self, request):
-        product_id = request.POST.get('product_id')
-        stock_out_quantity = int(request.POST.get('stock_out_quantity', 0))
-        expiry_date = request.POST.get('expiry_date')
+        selected_products = request.POST.getlist('selected_products')
+        errors = []
+        success = []
 
-        if product_id and stock_out_quantity > 0 and expiry_date:
-            stock = get_object_or_404(Stock, id=product_id)
+        if not selected_products:
+            messages.error(request, "No products selected for stock out.")
+            return redirect('general-stock-out')
 
-            # Check stock availability
-            stock_history_entry = StockHistory.objects.filter(
-                stock=stock, expiry_date=expiry_date, quantity_added__gt=0
-            ).order_by('date').first()
+        for product_data in selected_products:
+            try:
+                # Extract stock ID and expiry date
+                stock_id, expiry_date = product_data.split('-')
+                expiry_date = (
+                    datetime.strptime(expiry_date, "%Y-%m-%d").date()
+                    if expiry_date != "N/A"
+                    else None
+                )
 
-            if stock_history_entry and stock_history_entry.total_quantity >= stock_out_quantity:
-                stock.quantity -= stock_out_quantity
-                stock_history_entry.quantity_added -= stock_out_quantity
+                # Fetch the quantity to stock out
+                quantity_to_stock_out = int(request.POST.get(f'stock_out_quantity_{stock_id}', 0))
+                stock = get_object_or_404(Stock, pk=stock_id)
+
+                # Validation: Ensure sufficient stock
+                if quantity_to_stock_out <= 0 or quantity_to_stock_out > stock.quantity:
+                    errors.append(f"Invalid stock out quantity for {stock.generic_name}.")
+                    continue
+
+                # Reduce the stock quantity
+                stock.quantity -= quantity_to_stock_out
                 stock.save()
-                stock_history_entry.save()
 
-                # Create history entry
-                # Create history entry instead of modifying existing history
+                # Log the stock out in StockHistory
                 StockHistory.objects.create(
                     stock=stock,
-                    quantity_added=-stock_out_quantity,
+                    quantity_added=-quantity_to_stock_out,
                     total_quantity=stock.quantity,
-                    updated_by=request.user,
+                    updated_by=request.user if request.user.is_authenticated else None,
                     expiry_date=expiry_date,
                 )
 
-                messages.success(request, "Stock out successfully recorded.")
-            else:
-                messages.error(request, "Not enough stock available.")
-        else:
-            messages.error(request, "Invalid selection or quantity.")
+                success.append(f"Successfully processed stock out for {stock.generic_name}.")
+            except Exception as e:
+                errors.append(f"Error processing stock out: {e}")
 
-        return redirect('inventory')
+        # Add messages to display on the page
+        if success:
+            messages.success(request, " | ".join(success))
+        if errors:
+            messages.error(request, " | ".join(errors))
 
+        return redirect('general-stock-out')
+def stock_suggestions(request):
+    query = request.GET.get('q', '')
+    suggestions = []
 
+    if query:
+        matching_stocks = Stock.objects.filter(
+            Q(generic_name__icontains=query) |
+            Q(brand_name__icontains=query) |
+            Q(dosage_strength__icontains=query) |
+            Q(form__name__icontains=query) |
+            Q(pharmacologic_category__name__icontains=query)
+        ).distinct()
 
+        suggestions = list(
+            matching_stocks.values(
+                'pk',
+                'generic_name',
+                'brand_name',
+                'dosage_strength',
+                'form__name',
+            )
+        )
 
+    return JsonResponse({'suggestions': suggestions})
 from django.db.models import F
 
 
